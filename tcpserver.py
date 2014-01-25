@@ -1,44 +1,46 @@
 import socket
 import threading
-import time
-import math
 import SocketServer
 
-counter = 0.0
+from ball import BallFinder
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
-
     def handle(self):
-        global counter
-        data = self.request.recv(1024)
-        cur_thread = threading.current_thread()
-        x = math.sin(2.0*3.14159/100.0 * counter)
-        y = math.cos(2.0*3.14159/100.0 * counter)
-        w = 1.0 + math.sin(2.0*3.14159/50.0 * counter)
-        counter += 1.0
-        response = '{} {} {}'.format(x,y,w)
+        data = self.request.recv(8) # We only expect 1 byte, but be careful anyway
+        # Determine what thread to use in order to get the data requested
+        if data[0].lower() == 'g':
+            # We want the goal tracking thread
+            pass # TODO - remove when actual code is in place
+            
+        elif data[0].lower() == 'r' or data[0].lower() == 'b':
+            # Catching thread
+            pass # TODO - remove when actual code is in place
+        
+        else:
+            response = '-999' # Invalid request
+        
         self.request.sendall(response)
 
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
 if __name__ == "__main__":
-    # Port 0 means to select an arbitrary unused port
-    HOST, PORT = "10.47.74.42", 4774
+    HOST, PORT = "", 4774 # Bind to all address on port 4774
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
     ip, port = server.server_address
 
     # Start a thread with the server -- that thread will then start one
     # more thread for each request
-    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread = threading.Thread(target=server.serve_forever, name="tcpserver")
     # Exit the server thread when the main thread terminates
+    # Makes breaking out of program with Ctrl-C easier
     server_thread.daemon = True
     server_thread.start()
-    print "Server loop running in thread:", server_thread.name
     
     while True:
         # Infinite loop to keep the main thread running
         # and waiting for connections
+        # Makes breaking out of program with Ctrl-C easier
         pass
 
