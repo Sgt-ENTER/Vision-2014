@@ -2,10 +2,11 @@ import cv2
 import cv2.cv as cv
 
 class BallFinder:
-    def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
+    def __init__(self, colour, width = 640, height = 480): # Constructor to get the video capture set up
         self._vc = cv2.VideoCapture(-1)
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
+        self._is_red = (colour[0] == 'r' or colour[0] == 'R')
         self._vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self._width)
         self._vc.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self._height)
         # Public member variables to store the last calculated values
@@ -15,7 +16,8 @@ class BallFinder:
         self.diam = 99.0 # diam should be in the range (0.0, 2.0]
         
    
-    def find(self):
+    def find(self, colour):
+        self._is_red = (colour[0].lower() == 'r')
         if not self._vc:
             # Try to reinitialise, but still return None
             self.__init__()
@@ -26,9 +28,15 @@ class BallFinder:
             return None
         # The capture was successful. Start processing
         hsv_image = cv2.cvtColor(frame, cv.CV_BGR2HSV)
-        mask_neg = cv2.inRange(hsv_image, (0, 50, 50), (10, 255, 255))
-        mask_pos = cv2.inRange(hsv_image, (170, 50, 50), (180, 255, 255))
-        mask = mask_pos | mask_neg
+        # Choose mask based on self._is_red
+        if self._is_red:
+            # Red alliance
+            mask_neg = cv2.inRange(hsv_image, (0, 50, 50), (10, 255, 255))
+            mask_pos = cv2.inRange(hsv_image, (170, 50, 50), (180, 255, 255))
+            mask = mask_pos | mask_neg
+        else:
+            # Blue alliance
+            mask = cv2.inRange(hsv_image, (110, 50, 50), (130, 255, 255))
         
         kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(7, 7))
         opened = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -67,10 +75,10 @@ class BallFinder:
             int(self.diam*self._width/2.0))
     
 if __name__ == "__main__":
-    bf = BallFinder(640, 480)
+    bf = BallFinder('r', 640, 480)
     cv2.namedWindow("preview")
     
-    result = bf.find()
+    result = bf.find('r')
     while result != None:
         frame, contours, largest_index = result
         
@@ -90,4 +98,4 @@ if __name__ == "__main__":
         if key != -1: # Exit on any key
             break
         # Get the next frame, and loop forever
-        result = bf.find()
+        result = bf.find('r')
