@@ -1,8 +1,27 @@
 import socket
 import threading
 import SocketServer
+import time
 
 from ball import BallFinder
+from Goal import GoalFinder
+
+#gf = GoalFinder()
+bf = BallFinder()
+
+ball_finding = threading.Event()
+goal_finding = threading.Event()
+
+def find_goal():
+	while True:
+		goal_finding.wait()
+		gf.find()
+		
+def find_ball():
+	while True:
+		ball_finding.wait()
+		bf.find()
+		
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
@@ -10,12 +29,15 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         # Determine what thread to use in order to get the data requested
         if data[0].lower() == 'g':
             # We want the goal tracking thread
-            pass # TODO - remove when actual code is in place
-            
+			ball_finding.clear()
+			goal_finding.set()
+			response = "foo"
         elif data[0].lower() == 'r' or data[0].lower() == 'b':
-            # Catching thread
-            pass # TODO - remove when actual code is in place
-        
+			bf.setColour(data[0].lower())
+			#Catching thread
+			goal_finding.clear()
+			ball_finding.set()
+			response = response = '{} {} {}'.format(bf.xbar,bf.ybar,bf.diam)
         else:
             response = '-999' # Invalid request
         
@@ -38,9 +60,21 @@ if __name__ == "__main__":
     server_thread.daemon = True
     server_thread.start()
     
+    goal_thread = threading.Thread(target=find_goal, name = 'finding goal')
+    goal_thread.daemon = True
+    goal_finding.clear()
+    goal_thread.start()
+    
+    ball_thread = threading.Thread(target=find_ball, name = 'finding ball')
+    ball_thread.daemon = True
+    ball_finding.clear()
+    ball_thread.start()
+    
     while True:
+		pass
+		
         # Infinite loop to keep the main thread running
         # and waiting for connections
         # Makes breaking out of program with Ctrl-C easier
-        pass
+        #pass
 

@@ -7,7 +7,7 @@ import math
 kernel = cv2.getStructuringElement (cv2.MORPH_ELLIPSE,(4, 4))
 
 class BallFinder:
-    def __init__(self, colour, width = 640, height = 480): # Constructor to get the video capture set up
+    def __init__(self, colour='r', width = 640, height = 480): # Constructor to get the video capture set up
         self._vc = cv2.VideoCapture(-1)
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
@@ -38,9 +38,11 @@ class BallFinder:
         self._is_red = (colour[0] == 'r' or colour[0] == 'R')
         self._vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self._width)
         self._vc.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self._height)
-   
-    def find(self, colour):
+
+    def setColour(self, colour):
         self._is_red = (colour[0].lower() == 'r')
+
+    def find(self):
         if not self._vc:
             # Try to reinitialise, but still return None
             self.__init__()
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     bf = BallFinder('r', 640, 480)
     cv2.namedWindow("preview")
     
-    result = bf.find('r')
+    result = bf.find()
     while result != None:
         frame, contours, largest_index = result
         
@@ -134,4 +136,4 @@ if __name__ == "__main__":
         if key != -1: # Exit on any key
             break
         # Get the next frame, and loop forever
-        result = bf.find('r')
+        result = bf.find()

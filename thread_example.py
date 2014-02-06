@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # Create and start goal thread
     goal_thread = threading.Thread(target=find_goal, name="findgoal")
     goal_thread.daemon = True
-    goal_event.set() # Allow goal thread to run initially
+    goal_thread.set() # Allow goal thread to run initially
     goal_thread.start()
     
     # Create and start catch thread
