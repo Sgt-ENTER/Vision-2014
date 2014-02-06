@@ -2,9 +2,6 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 import math
-import socket
-import threading
-import SocketServer
 
 #Kernel Dimensions
 kernel = cv2.getStructuringElement (cv2.MORPH_ELLIPSE,(4, 4))
