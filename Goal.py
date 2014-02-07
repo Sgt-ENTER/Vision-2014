@@ -1,6 +1,8 @@
 import cv2
 import cv2.cv as cv
 
+
+
 class GoalFinder:
     def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
 		#video Capture settings
@@ -26,8 +28,16 @@ class GoalFinder:
 ##        self.width = 99.0 # diam should be in the range (0.0, 2.0]
 ##        self.height = 99.0
         self.rectangles = []
+        
+        self.VHlow = 0.94
+        self.VHhigh = 1.74
+        self.HHlow = 1.73
+        self.HHhigh = 1.93
+        self.distance = 99.0
+        self.maxWidth = 0
+		
 
-
+        self.maxW = []
         self.threshold = 250
         self.maxval = 255
 
@@ -44,15 +54,15 @@ class GoalFinder:
         # Do Goal Tracking Bit
         greyimage = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
         equ = cv2.equalizeHist(greyimage)
-        ret, dogshit = cv2.threshold(equ, self.threshold, self.maxval, cv2.THRESH_BINARY)
-        dogshit2 = cv2.adaptiveThreshold(dogshit, self.maxval,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,19,2)
+        ret, thresh = cv2.threshold(equ, self.threshold, self.maxval, cv2.THRESH_BINARY)
+        thresh2 = cv2.adaptiveThreshold(thresh, self.maxval,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,19,2)
         kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(5, 5))
-        opened = cv2.morphologyEx(dogshit, cv2.MORPH_OPEN, kernel)
+        opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         blur = cv2.GaussianBlur(opened, (1,1), 0)
-        #dilopened = cv2.dilate(dogshit, kernel, iterations = 2)
+        #dilopened = cv2.dilate(thresh, kernel, iterations = 2)
         edge = cv2.Canny(blur,0, self.maxval)
-        dilopened = cv2.dilate(dogshit, kernel, iterations = 2)
-        #dilopened = cv2.erode(dogshit, kernel, iterations = 2)
+        dilopened = cv2.dilate(thresh, kernel, iterations = 2)
+        #dilopened = cv2.erode(thresh, kernel, iterations = 2)
         #bgmask = self.bgsub.apply(frame)
 
         contours, hierarchy = cv2.findContours(dilopened, cv2.cv.CV_RETR_EXTERNAL, cv2.cv.CV_CHAIN_APPROX_NONE)
@@ -61,10 +71,24 @@ class GoalFinder:
             #self.rect_index[index] = index
             area = cv2.contourArea(contour)
             if area > 1500:
-                x,y,w,h = cv2.boundingRect(contours[index])
-                found_rectangles.append([x,y,w,h])
+				
+				x,y,w,h = cv2.boundingRect(contours[index])
+				found_rectangles.append([x,y,w,h])
+                    
         self.rectangles = found_rectangles
+        
+        for i in range(len(self.rectangles)):
+            for number in self.rectangles: #3 corresponds to w
+				for value in number[:3]:
+                    self.maxW.append(value)
+        
+        #print self.maxW	
+        for value in enumerate(self.maxW):
+			self.maxWidth = max(value)
+				
+        self.distance = (-5)*(10**-6)*(self.maxWidth**3)+(0.0028)*(self.maxWidth**2)-(0.5674)*(self.maxWidth)+(47.359)
 
+        #print self.distance
         goal_found = False
         #if contours:
 			#for index, contour in enumerate(contours):
@@ -103,7 +127,7 @@ if __name__ == "__main__":
         for rect in gf.rectangles:
             x,y,w,h = rect
             cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 7)
-        print index
+        
         #frame, contours, largest_index = result\
         #cv2.drawContours(frame, contours, index, (0,255,0), 2)
 

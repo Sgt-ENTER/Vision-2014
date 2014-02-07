@@ -6,7 +6,7 @@ import time
 from ball import BallFinder
 from Goal import GoalFinder
 
-#gf = GoalFinder()
+gf = GoalFinder()
 bf = BallFinder()
 
 ball_finding = threading.Event()
