@@ -1,5 +1,7 @@
 import cv2
 import cv2.cv as cv
+import numpy as np
+import math as m
 
 
 
@@ -33,11 +35,20 @@ class GoalFinder:
         self.VHhigh = 1.74
         self.HHlow = 1.73
         self.HHhigh = 1.93
-        self.distance = 99.0
-        self.maxWidth = 0
-		
+        
+        
+        self.height = []
+        self.Hpos = 3
+        self.Hlength = 0
+        self.Glength = 0
+        self.sort = []
+        self.avg = 0
+       
+        self.bestpos = 5 #find by testin on cat
+        self.angle = 0
+        
 
-        self.maxW = []
+        
         self.threshold = 250
         self.maxval = 255
 
@@ -70,26 +81,35 @@ class GoalFinder:
         for index, contour in enumerate(contours):
             #self.rect_index[index] = index
             area = cv2.contourArea(contour)
-            if area > 1500:
-				
+            if area > 1800:
 				x,y,w,h = cv2.boundingRect(contours[index])
 				found_rectangles.append([x,y,w,h])
+				if self.Glength != 0:
+					for i in range(self.Glength):
+						if self.Hlength < self.Glength:
+							self.height.append(self.rectangles[i][self.Hpos])
+					
+					self.sort = sorted(self.height)
+					Slength = len(self.sort)
+					if Slength !=0:
+						if Slength < 3:
+							highsort = ([self.sort[Slength -1]])
+							
+						else:
+							highsort = ([self.sort[Slength -2], self.sort[Slength -1]])
+							self.avg = np.average(highsort)
+					else:
+						self.avg = 99.0
                     
         self.rectangles = found_rectangles
+        self.Glength = len(self.rectangles)
+        self.Hlength = len(self.height)
         
-        for i in range(len(self.rectangles)):
-            for number in self.rectangles: #3 corresponds to w
-				for value in number[:3]:
-                    self.maxW.append(value)
-        
-        #print self.maxW	
-        for value in enumerate(self.maxW):
-			self.maxWidth = max(value)
-				
-        self.distance = (-5)*(10**-6)*(self.maxWidth**3)+(0.0028)*(self.maxWidth**2)-(0.5674)*(self.maxWidth)+(47.359)
-
-        #print self.distance
-        goal_found = False
+        equation = (8*10**(-9)*(self.avg**4))-(8*10**(-6)*(self.avg**2))+(0.0032*(self.avg**2))-(0.6061*self.avg)+53.116
+        angle = m.acos(self.bestpos/equation) #in radians
+        self.angle = (angle*m.pi/2)
+        print self.sort
+			
         #if contours:
 			#for index, contour in enumerate(contours):
 				#largest_size = cv2.contourArea(contour)
@@ -101,7 +121,7 @@ class GoalFinder:
 				#cv2.drawContours(frame, contours, index, (0,255,0))
 				#goal_found = True
 
-        if not goal_found:
+        #if not goal_found:
             # No ball found so set the member variables to invalid values
 ##            self.xbar = 99.0
 ##            self.ybar = 99.0
@@ -110,7 +130,7 @@ class GoalFinder:
 
         # Return the frame, the contours and largest image in case we
         # want to show them on the screen
-         return 	frame #self.rectangles#, contours, index#, contours, largest_index
+         #return 	frame #self.rectangles#, contours, index#, contours, largest_index
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
@@ -129,11 +149,10 @@ if __name__ == "__main__":
             cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 7)
         
         #frame, contours, largest_index = result\
-        #cv2.drawContours(frame, contours, index, (0,255,0), 2)
-
-        cv2.imshow("preview", frame)
-
-        key = cv2.waitKey (20)
-        if key != -1: # Exit on any key
-            break
+        #cv2.drawContours(frame, contours, index, (0,255,0), 
+        if frame:
+            cv2.imshow("preview", frame)
+        key = cv2.waitKey (10)
+        if key != -1:
+			break# Exit on any keybreak
         # Get the next frame, and loop forever

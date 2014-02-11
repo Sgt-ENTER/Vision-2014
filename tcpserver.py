@@ -2,11 +2,12 @@ import socket
 import threading
 import SocketServer
 import time
+import numpy
 
 from ball import BallFinder
 from Goal import GoalFinder
 
-gf = GoalFinder()
+#gf = GoalFinder()
 bf = BallFinder()
 
 ball_finding = threading.Event()
@@ -31,7 +32,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             # We want the goal tracking thread
 			ball_finding.clear()
 			goal_finding.set()
-			response = "foo"
+			response = foo
         elif data[0].lower() == 'r' or data[0].lower() == 'b':
 			bf.setColour(data[0].lower())
 			#Catching thread
