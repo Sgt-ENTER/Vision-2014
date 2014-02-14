@@ -5,7 +5,7 @@ import numpy as np
 import math as m
 
 #Camera number
-CAMERA = 0
+CAMERA = 1
 
 class GoalFinder:
     def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
