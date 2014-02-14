@@ -2,7 +2,7 @@ import socket
 import threading
 
 from ball import BallFinder
-from Goal import GoalFinder
+from goal import GoalFinder
 
 HOST, PORT = "", 4774 # Bind to all address on port 4774
 
