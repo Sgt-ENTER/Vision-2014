@@ -5,6 +5,7 @@ from ball import BallFinder
 from goal import GoalFinder
 
 HOST, PORT = "", 4774 # Bind to all address on port 4774
+CRIO = "10.47.74.2"
 
 gf = GoalFinder()
 bf = BallFinder()
@@ -12,28 +13,35 @@ bf = BallFinder()
 ball_finding = threading.Event()
 goal_finding = threading.Event()
 
-sock = socket.socket(socket.AF_INET, # Internet
+recvsock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
-sock.bind((HOST, PORT)) # Any interface, port 4774
+recvsock.bind((HOST, PORT)) # Any interface, port 4774
+sendsock = socket.socket(socket.AF_INET, # Internet
+                     socket.SOCK_DGRAM) # UDP
 
 def find_goal():
     while True:
         goal_finding.wait()
         gf.find()
         # Output a UDP packet to whoever is listening
-        response = '{} {} {}'.format(gf.xpos, gf.ypos, gf.angle)
-        
+        response = 'g{} {} {}'.format(gf.xpos, gf.ypos, gf.angle)
+        sendsock.sendto(response, (CRIO, PORT))
+       
 def find_ball():
     while True:
         ball_finding.wait()
         bf.find()
         # Output a UDP packet to whoever is listening
-        response = '{} {} {}'.format(bf.xbar, bf.ybar, bf.diam)
-
+        if bf._is_red:
+            response = 'r{} {} {}'.format(bf.xbar, bf.ybar, bf.diam)
+        else:
+            response = 'b{} {} {}'.format(bf.xbar, bf.ybar, bf.diam)
+        sendsock.sendto(response, (CRIO, PORT))
+        
 def get_mode():
     '''Get the desired mode from the cRIO - whether to search for
     the goal or a particular colour of ball.'''
-    data, addr = sock.recvfrom(8) # buffer size is 8 bytes
+    data, addr = recvsock.recvfrom(8) # buffer size is 8 bytes
     # The recvfrom call will block until data received, so we just wait
     if data[0].lower() == 'g':
         # We want the goal tracking thread
