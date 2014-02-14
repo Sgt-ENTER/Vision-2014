@@ -13,7 +13,7 @@ class GoalFinder:
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
 
-		#video resolution
+        #video resolution
         self._vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self._width)
         self._vc.set(cv.CV_CAP_PROP_FRAME_HEIGHT, self._height)
 
@@ -86,7 +86,7 @@ class GoalFinder:
         self.angle = (self.angle*m.pi/2)
         self.xpos = self.currentpos*m.cos(self.angle)
         self.ypos = self.currentpos*m.sin(self.angle)
-        return 	frame #self.rectangles#, contours, index#, contours, largest_index
+        return frame #self.rectangles#, contours, index#, contours, largest_index
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
@@ -110,5 +110,5 @@ if __name__ == "__main__":
         print gf.absolute()
         key = cv2.waitKey (20)
         if key != -1:
-			break# Exit on any keybreak
+            break# Exit on any keybreak
         # Get the next frame, and loop forever
