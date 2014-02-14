@@ -4,11 +4,12 @@ import cv2.cv as cv
 import numpy as np
 import math as m
 
+#Camera number
+CAMERA = 0
+
 class GoalFinder:
     def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
-		#video Capture settings
-        self.videoPort = 0 #change to index cameras
-        self._vc = cv2.VideoCapture(self.videoPort)
+        self._vc = cv2.VideoCapture(CAMERA)
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
 
@@ -35,8 +36,13 @@ class GoalFinder:
         self.currentpos = self.defaultHvalue
 
         # Threshold to detect rectanlges
-        self.threshold = 250
-        self.maxval = 255
+        self._threshold = 250
+        self._maxval = 255
+        self._minarea = 1800
+        
+        # Kernel for eroding/dilating
+        self._kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(5, 5))
+
 
     def find(self):
         if not self._vc:
@@ -51,21 +57,20 @@ class GoalFinder:
         # Do Goal Tracking Bit
         greyimage = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
         equ = cv2.equalizeHist(greyimage)
-        ret, thresh = cv2.threshold(equ, self.threshold, self.maxval, cv2.THRESH_BINARY)
-        thresh2 = cv2.adaptiveThreshold(thresh, self.maxval,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,19,2)
-        kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(5, 5))
-        opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        ret, thresh = cv2.threshold(equ, self._threshold, self._maxval, cv2.THRESH_BINARY)
+        thresh2 = cv2.adaptiveThreshold(thresh, self._maxval,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,19,2)
+        opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, self._kernel)
         blur = cv2.GaussianBlur(opened, (1,1), 0)
-        edge = cv2.Canny(blur,0, self.maxval)
-        dilopened = cv2.dilate(thresh, kernel, iterations = 2)
+        edge = cv2.Canny(blur,0, self._maxval)
+        dilopened = cv2.dilate(thresh, self._kernel, iterations = 2)
 
-        contours, hierarchy = cv2.findContours(dilopened, cv2.cv.CV_RETR_EXTERNAL, cv2.cv.CV_CHAIN_APPROX_NONE)
+        contours, hierarchy = cv2.findContours(dilopened, cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_NONE)
         found_rectangles = []
         filter_height = []
         nothernstar = self.defaultHvalue
         for index, contour in enumerate(contours):
             area = cv2.contourArea(contour)
-            if area > 1800:
+            if area > self._minarea:
                 x,y,w,h = cv2.boundingRect(contours[index])
                 found_rectangles.append([x,y,w,h])
                 filter_height.append([h])
