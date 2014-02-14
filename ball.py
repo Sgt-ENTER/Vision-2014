@@ -1,14 +1,15 @@
 import cv2
 import cv2.cv as cv
-import numpy as np
-import math
+
+#Camera number
+CAMERA = 0
 
 #Kernel Dimensions
 kernel = cv2.getStructuringElement (cv2.MORPH_ELLIPSE,(4, 4))
 
 class BallFinder:
     def __init__(self, colour='r', width = 640, height = 480): # Constructor to get the video capture set up
-        self._vc = cv2.VideoCapture(-1)
+        self._vc = cv2.VideoCapture(CAMERA)
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
         
