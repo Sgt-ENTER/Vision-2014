@@ -121,7 +121,7 @@ class GoalFinder:
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
-        return (float(self.gRange),
+       return (float(self.gRange),
             float(self.angle),
             int(self.Hot))
 
