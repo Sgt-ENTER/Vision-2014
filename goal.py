@@ -5,7 +5,7 @@ import numpy as np
 import math as m
 
 #Camera number
-CAMERA = 1
+CAMERA = 0
 
 class GoalFinder:
     def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
@@ -29,11 +29,12 @@ class GoalFinder:
         self.rectHeight = self.defaultHvalue
 
         # Best position to fire from
-        self.bestPosition = 5 # ft (position from goal)
+        self.bestPosition = 1.00 # in meters
+        self.center = 0.5* self._width
         self.angle = self.defaultHvalue
-        self.xpos = self.defaultHvalue
-        self.ypos = self.defaultHvalue
-        self.currentpos = self.defaultHvalue
+        self.grange = self.defaultHvalue
+        self.dummy = self.defaultHvalue
+        self.currentPos = self.defaultHvalue
 
         # Threshold to detect rectanlges
         self._threshold = 250
@@ -67,35 +68,40 @@ class GoalFinder:
         contours, hierarchy = cv2.findContours(dilopened, cv.CV_RETR_EXTERNAL, cv.CV_CHAIN_APPROX_NONE)
         found_rectangles = []
         filter_height = []
-        nothernstar = self.defaultHvalue
+        filter_x = []
+        northernstar = self.defaultHvalue
         for index, contour in enumerate(contours):
             area = cv2.contourArea(contour)
             if area > self._minarea:
                 x,y,w,h = cv2.boundingRect(contours[index])
                 found_rectangles.append([x,y,w,h])
                 filter_height.append([h])
+                filter_x.append([x])
+                filter_x = sorted(filter_x)
                 filter_height = sorted(filter_height)
                 if len(filter_height) != 0:
-                   nothernstar = filter_height[len(filter_height)-1]
-        self.rectangles = found_rectangles
-        self.rectHeight = nothernstar
-        self.rect_index = len(found_rectangles)
-
-        #self.currentpos = (8*10**(-9)*(self.rectHeight**4))-(8*10**(-6)*(self.rectHeight**3))+(0.0032*(self.rectHeight**2))-(0.6061*self.rectHeight)+53.116
-        self.angle = m.acos(self.bestPosition/self.currentpos) #in radians
-        self.angle = (self.angle*m.pi/2)
-        self.xpos = self.currentpos*m.cos(self.angle)
-        self.ypos = self.currentpos*m.sin(self.angle)
+                   northernstar = filter_height[len(filter_height)-1]
+                   angletoS = filter_x[len(filter_x)-1]
+                   self.rectangles = found_rectangles
+                   if northernstar != 0:
+			           self.rectHeight = northernstar[len(northernstar)-1]		           
+			           angle_x = angletoS[len(angletoS)-1]
+			           angle_x = abs((angle_x-self.center)/self.center)
+			           self.rect_index = len(found_rectangles)
+			           if self.bestPosition/self.currentPos < 1.00:						   
+			               self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
+			               self.angle = m.degrees(m.asin(self.bestPosition/self.currentPos))
+			               self.grange = self.currentPos
         return frame #self.rectangles#, contours, index#, contours, largest_index
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
-        return (int(self.angle),
-            int(self.xpos),
-            int(self.ypos))
+        return (int(self.grange),
+            float(self.angle),
+            int(self.dummy))
 
 if __name__ == "__main__":
-    gf = GoalFinder( 640, 480)
+    gf = GoalFinder(640, 480)
     cv2.namedWindow("preview")
     while True:
         result = gf.find()
@@ -107,8 +113,9 @@ if __name__ == "__main__":
         #frame, contours, largest_index = result\
         #cv2.drawContours(frame, contours, index, (0,255,0),
         cv2.imshow("preview", frame)
-        print gf.absolute()
+        #print gf.absolute()
         key = cv2.waitKey (20)
         if key != -1:
             break# Exit on any keybreak
         # Get the next frame, and loop forever
+        result = gt.find()
