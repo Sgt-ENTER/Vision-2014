@@ -5,7 +5,7 @@ import numpy as np
 import math as m
 
 #Camera number
-CAMERA = 1
+CAMERA = 0
 
 class GoalFinder:
     def __init__(self, width = 640, height = 480): # Constructor to get the video capture set up
@@ -115,7 +115,6 @@ if __name__ == "__main__":
            for rect in gf.rectangles:
                x,y,w,h = rect
                cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 7)
-
 			#frame, contours, largest_index = result\
 			#cv2.drawContours(frame, contours, index, (0,255,0),
            cv2.imshow("preview", frame)
