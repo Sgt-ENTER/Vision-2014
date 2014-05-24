@@ -14,10 +14,10 @@ class GoalFinder:
         self.center = 0.5* self._width
 
 		#initialise video feed and make sure its good
-        try: 
-            self._vc = cv2.VideoCapture(self.videoPort)
-        except:
-			self._vc = None			
+        #try: 
+            #self._vc = cv2.VideoCapture(self.videoPort)
+        #except:
+			#self._vc = None			
 		
 		#video resolution
         self._vc.set(cv.CV_CAP_PROP_FRAME_WIDTH, self._width)
@@ -49,14 +49,8 @@ class GoalFinder:
         self._kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(5, 5))
 
 
-    def find(self):
-        if not self._vc:
-            # Try to reinitialise, but still return None
-            self.__init__()
-            return None
-        # We have a video capture object so we can proceed
-        retval, frame = self._vc.read()
-        if not retval:
+    def find(self,frame):
+        if frame == None:
             self.gRange = self.defaultHvalue
             self.angle = self.defaultHvalue
             self.Hot = self.defaultHvalue
@@ -107,12 +101,12 @@ class GoalFinder:
                 self.rectWidth = angletoS[len(angletoS)-1]
                 self.rect_index = len(found_rectangles)
                 
-                if self.bestPosition/self.currentPos < 1.00:
-                    self.rectWidth = self.rectWidth - self.center
-                    self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
-                    self.currentWidth = 150.56*abs(self.rectWidth)**(-0.805)
-                    self.angle = m.acos((self.currentWidth**2/self.rectHeight**2)-1)
-                    self.grange = self.currentPos
+                #if self.bestPosition/self.currentPos < 1.00:
+                    #self.rectWidth = self.rectWidth - self.center
+                    #self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
+                    #self.currentWidth = 150.56*abs(self.rectWidth)**(-0.805)
+                    #self.angle = m.acos((self.currentWidth**2/self.rectHeight**2)-1)
+                    #self.grange = self.currentPos
 			        
         return frame #self.rectangles#, contours, index#, contours, largest_index
 
