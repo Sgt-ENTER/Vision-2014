@@ -91,37 +91,34 @@ class GoalFinder:
                 found_rectangles.append([x,y,w,h])
                 filter_height.append([h])
                 filter_x.append([x])
-                if len(filter_height) != 0:
-                    for index, w in enumerate(filter_height):
-                        if w == max(filter_height):
-                            xvalue = index - 1
-
-                    filter_height = sorted(filter_height)
-                    northernstar = filter_height[len(filter_height)-1]
-                    angletoS = filter_x[0]
-                    self.rectangles = found_rectangles	
-                    if northernstar != 0:
-                        self.rectHeight = northernstar[len(northernstar)-1]
-                        self.rectWidth = angletoS[len(angletoS)-1]
-                        self.rect_index = len(found_rectangles)
-
-                        self.rectWidth = abs(self.rectWidth - self.center)
-                        self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
-                        self.currentWidth = 150.56*abs(self.rectWidth)**(-0.805)
-                        self.angle = m.degrees(m.acos(-1 + (self.currentWidth**2/self.currentPos**2)))
-                        self.gRange = self.currentPos
-                        goal_found = True
-
-        if not goal_found:
-			self.gRange
-			self.angle
-			self.Hot
-
+                
+        filter_height = sorted(filter_height)
+        if len(filter_height) != 0:
+            for index, w in enumerate(filter_height):
+                if w == max(filter_height):
+                    xvalue = index - 1
+            
+            northernstar = filter_height[len(filter_height)-1]
+            angletoS = filter_x[xvalue - 1]
+            self.rectangles = found_rectangles
+            
+            if northernstar != 0:
+                self.rectHeight = northernstar[len(northernstar)-1]
+                self.rectWidth = angletoS[len(angletoS)-1]
+                self.rect_index = len(found_rectangles)
+                
+                if self.bestPosition/self.currentPos < 1.00:
+                    self.rectWidth = self.rectWidth - self.center
+                    self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
+                    self.currentWidth = 150.56*abs(self.rectWidth)**(-0.805)
+                    self.angle = m.acos((self.currentWidth**2/self.rectHeight**2)-1)
+                    self.grange = self.currentPos
+			        
         return frame #self.rectangles#, contours, index#, contours, largest_index
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
-       return (float(self.gRange),
+        return (float(self.gRange),
             float(self.angle),
             int(self.Hot))
 
