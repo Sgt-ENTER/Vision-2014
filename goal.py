@@ -11,7 +11,7 @@ class GoalFinder:
         self._vc = cv2.VideoCapture(CAMERA)
         self._width = 1.0 * width # Force a float
         self._height = 1.0 * height
-        self.center = 0.5* self._width
+        self._center = 0.5* self._width
 
 		#initialise video feed and make sure its good
         #try: 
@@ -43,7 +43,7 @@ class GoalFinder:
         # Threshold to detect rectanlges
         self._threshold = 250
         self._maxval = 255
-        self._minarea = 2.8125*self._width
+        self._minarea = 2.8125*self._width #value from spreadsheets
 
         # Kernel for eroding/dilating
         self._kernel = cv2.getStructuringElement (cv2.MORPH_RECT,(5, 5))
@@ -85,30 +85,44 @@ class GoalFinder:
                 found_rectangles.append([x,y,w,h])
                 filter_height.append([h])
                 filter_x.append([x])
-                
+        #sorts the filtered height into acending order        
         filter_height = sorted(filter_height)
         if len(filter_height) != 0:
+            #stores the index of max value in filter height
+            #if it can compare w to max filter height
+            #xvalue is index -1 (this make it into index form)
             for index, w in enumerate(filter_height):
                 if w == max(filter_height):
-                    xvalue = index - 1
+                    xvalue = index - 1     #x
             
             northernstar = filter_height[len(filter_height)-1]
-            angletoS = filter_x[xvalue - 1]
+            
+            angletoS = filter_x[xvalue]
+           
             self.rectangles = found_rectangles
             
-            if northernstar != 0:
-                self.rectHeight = northernstar[len(northernstar)-1]
-                self.rectWidth = angletoS[len(angletoS)-1]
-                self.rect_index = len(found_rectangles)
-                
+         
+            self.rectHeight = northernstar[len(northernstar)-1]
+            self.rectWidth = angletoS[len(angletoS)-1]
+            self.rect_index = len(found_rectangles)
+            
                 #if self.bestPosition/self.currentPos < 1.00:
-                    #self.rectWidth = self.rectWidth - self.center
-                    #self.currentPos = 461.25*self.rectHeight**(-0.916) # in meters
-                    #self.currentWidth = 150.56*abs(self.rectWidth)**(-0.805)
-                    #self.angle = m.acos((self.currentWidth**2/self.rectHeight**2)-1)
-                    #self.grange = self.currentPos
-			        
+            self.angle = (self.rectWidth/(self._width/2))-1#rescaled width value from -1 to +1
+            self.gRange = 461.25*self.rectHeight**(-0.916) # finds range of goal in meteres 
+            self.Hot = self.rect_index 
         return frame #self.rectangles#, contours, index#, contours, largest_index
+        
+    def capture(self):
+        if not self._vc:
+            # Try to reinitialise, but still return None
+            self.__init__()
+            return None
+        # We have a video capture object so we can proceed
+        retval, frame = self._vc.read()
+        if retval:
+            return frame
+        else:
+            return None
 
     def absolute(self):
         # Convert xbar, ybar and diam to absolute values for showing on screen
@@ -119,21 +133,21 @@ class GoalFinder:
 if __name__ == "__main__":
     gf = GoalFinder(640, 480)
     cv2.namedWindow("preview")
-    while True:
-        result = gf.find()
+    result = gf.find(gf.capture())
+    while result != None:
+        
         ## After here is for visual feedback only
-        try:
-           frame = result
-           for rect in gf.rectangles:
-               x,y,w,h = rect
-               cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 7)
-			#frame, contours, largest_index = result\
-			#cv2.drawContours(frame, contours, index, (0,255,0),
-           cv2.imshow("preview", frame)
-           print gf.absolute()
-           key = cv2.waitKey (20)
-           if key != -1:
-               break# Exit on any keybreak
+       frame = result
+       for rect in gf.rectangles:
+           x,y,w,h = rect
+           cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 7)
+	       #frame, contours, largest_index = result\
+		   #cv2.drawContours(frame, contours, index, (0,255,0),
+       cv2.imshow("preview", frame)
+       print gf.absolute()
+       key = cv2.waitKey (20)
+       if key != -1:
+           break# Exit on any keybreak
 			# Get the next frame, and loop forever
-        except:
-		    pass
+       result = gf.find(gf.capture())
+		  

@@ -7,12 +7,13 @@ from goal import GoalFinder #gets our goal.py code
 def test_find():
     gf = GoalFinder()   
     
-    with open('img/goal.csv') as csvfile:
+    with open('img/goal.csv','rb') as csvfile:
 	#opens image file
         csvreader = csv.reader(csvfile, delimiter=',')
         for row in csvreader:
             frame = cv2.imread('img/'+row[0])
             gf.find(frame)
+           
             delta = 0.05
             # Create a separate test for each image
             yield find_goal, gf, row[0], row[1], row[2], row[3], delta
